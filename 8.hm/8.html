@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fun Facts About Yusup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #3d2b1f;      
+            --card-brown: #b08968;   
+            --fact-box: #7f5539;     
+            --text-light: #ede0d4;   
+            --accent: #ddb892;       
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-deep);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 20px 0;
+        }
+
+        .container {
+            background-color: var(--card-brown);
+            padding: 2.5rem;
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            border: 2px solid var(--fact-box);
+        }
+
+        h1 { color: var(--bg-deep); font-size: 2.5rem; margin-bottom: 5px; font-weight: 800; }
+
+        #counter-text {
+            color: var(--text-light);
+            background-color: var(--fact-box);
+            display: inline-block;
+            padding: 5px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        #fact-container {
+            margin: 10px 0;
+            text-align: left;
+        }
+
+        .fact {
+            background-color: var(--fact-box);
+            color: var(--text-light);
+            margin: 12px 0;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            border-left: 6px solid var(--bg-deep);
+            
+            /* Hidden state for animation */
+            display: none; 
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.6s ease-out;
+        }
+
+        /* Visible state */
+        .fact.show {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        #reveal-btn { background-color: var(--bg-deep); color: var(--accent); }
+        #reset-btn { background-color: var(--accent); color: var(--bg-deep); }
+        button:active { transform: scale(0.95); }
+
+        .all-done {
+            color: var(--bg-deep);
+            font-weight: 800;
+            margin-top: 15px;
+            display: none;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>YUSUP</h1>
+    <p id="counter-text">Facts revealed: 0</p>
+
+    <div id="fact-container">
+        <div class="fact" id="fact-1">🤐 1. I hate being ignored by someone.</div>
+        <div class="fact" id="fact-2">🎹 2. I adore playing the piano.</div>
+        <div class="fact" id="fact-3">☕ 3. I am getting used to coffee.</div>
+        <div class="fact" id="fact-4">🍳 4. I can't start my day without breakfast.</div>
+        <div class="fact" id="fact-5">🍫 5. I hate chocolate!</div>
+        <div class="fact" id="fact-6">📐 6. I am studying Math in conjunction with TOEFL.</div>
+        <div class="fact" id="fact-7">🥧 7. I can't eat a lot of pizza; however, I can eat plenty of pide!</div>
+        <div class="fact" id="fact-8">🥇 8. When I see someone who is better than me at something, I extremely want to be better than them.</div>
+        
+        <p id="final-msg" class="all-done">🔥 You've unlocked the full profile! 🔥</p>
+    </div>
+
+    <div class="controls">
+        <button id="reveal-btn">Reveal Next Fact</button>
+        <button id="reset-btn">Reset</button>
+    </div>
+</div>
+
+<script>
+    const revealBtn = document.getElementById('reveal-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const counterText = document.getElementById('counter-text');
+    const finalMsg = document.getElementById('final-msg');
+    
+    const allFacts = document.querySelectorAll('.fact');
+    const total = allFacts.length;
+    let currentFact = 0;
+
+    revealBtn.addEventListener('click', () => {
+        if (currentFact < total) {
+            currentFact++;
+            const factElement = document.getElementById(`fact-${currentFact}`);
+            factElement.classList.add('show');
+            
+            counterText.innerText = `Facts revealed: ${currentFact}`;
+
+            if (currentFact === total) {
+                finalMsg.style.display = 'block';
+                revealBtn.style.display = 'none';
+            }
+        }
+    });
+
+    resetBtn.addEventListener('click', () => {
+        currentFact = 0;
+        counterText.innerText = `Facts revealed: 0`;
+        finalMsg.style.display = 'none';
+        revealBtn.style.display = 'block';
+
+        allFacts.forEach(fact => {
+            fact.classList.remove('show');
+        });
+    });
+</script>
+
+</body>
+</html>

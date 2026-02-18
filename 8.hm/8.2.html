@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Name | Interactive Portfolio</title>
+    <style>
+        /* --- Modern Reset & Variables --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        html { scroll-behavior: smooth; }
+
+        :root {
+            --primary-red: #e63946;
+            --dark-bg: #1a1a1a;
+            --card-bg: #252525;
+            --text-light: #f1f1f1;
+            --text-dim: #a0a0a0;
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        [data-theme="light"] {
+            --dark-bg: #f4f4f4;
+            --card-bg: #ffffff;
+            --text-light: #1a1a1a;
+            --text-dim: #4a4a4a;
+        }
+
+        body { 
+            background-color: var(--dark-bg); 
+            color: var(--text-light); 
+            line-height: 1.6; 
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* --- Header & Nav --- */
+        header {
+            padding: 1rem 10%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(26, 26, 26, 0.95);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid var(--primary-red);
+            backdrop-filter: blur(10px);
+        }
+        [data-theme="light"] header { background: rgba(244, 244, 244, 0.95); }
+        
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary-red); letter-spacing: 2px; }
+        nav { display: flex; align-items: center; }
+        nav a { color: var(--text-light); text-decoration: none; margin-left: 1.5rem; transition: 0.3s; font-weight: 500; }
+        nav a:hover { color: var(--primary-red); }
+
+        .theme-toggle {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-left: 1.5rem;
+            font-size: 0.8rem;
+        }
+
+        /* --- Scroll Reveal --- */
+        section { padding: 6rem 10%; opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
+        section.visible { opacity: 1; transform: translateY(0); }
+
+        h2 { font-size: 2.5rem; margin-bottom: 2rem; border-left: 5px solid var(--primary-red); padding-left: 15px; }
+
+        /* --- Typing Animation --- */
+        .typing-container { font-size: 1.2rem; min-height: 1.6em; }
+        .cursor { animation: blink 0.7s infinite; color: var(--primary-red); font-weight: bold; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* --- Animated Skills Bars --- */
+        .skill-item { margin-bottom: 1.5rem; width: 100%; max-width: 500px; }
+        .skill-info { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .progress-bg { background: #333; height: 10px; border-radius: 5px; overflow: hidden; }
+        .progress-fill { 
+            background: var(--primary-red); 
+            height: 100%; 
+            width: 0%; 
+            transition: width 1.5s ease-in-out; 
+        }
+
+        /* --- Project Filter/Tabs (No Images) --- */
+        .filter-container { margin-bottom: 2rem; display: flex; gap: 10px; flex-wrap: wrap; }
+        .filter-btn {
+            padding: 8px 20px;
+            border: 1px solid var(--primary-red);
+            background: transparent;
+            color: var(--text-light);
+            cursor: pointer;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+        .filter-btn.active, .filter-btn:hover { background: var(--primary-red); color: white; }
+        
+        .project-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+        
+        .project-card { 
+            background: var(--card-bg); 
+            border-radius: 12px; 
+            padding: 2rem;
+            border: 1px solid #333;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 200px;
+        }
+        .project-card:hover { border-color: var(--primary-red); transform: translateY(-10px); }
+        .project-card.hide { display: none; }
+        
+        .project-tag {
+            color: var(--primary-red);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        /* --- Contact Form --- */
+        .contact-form { max-width: 600px; margin: 0 auto; text-align: left; }
+        .form-group { margin-bottom: 1.5rem; position: relative; }
+        input, textarea {
+            width: 100%; padding: 12px; border: 1px solid #333; border-radius: 8px;
+            background: var(--card-bg); color: var(--text-light);
+        }
+        .error-msg { color: var(--primary-red); font-size: 0.8rem; display: none; margin-top: 5px; }
+        .success-msg { color: #2ecc71; display: none; text-align: center; margin-top: 1rem; }
+
+        .btn {
+            display: inline-block; background: var(--primary-red); color: white;
+            padding: 1rem 2.5rem; text-decoration: none; border-radius: 50px;
+            font-weight: bold; transition: 0.3s; border: none; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">REDLINE.</div>
+        <nav>
+            <a href="#about">About</a>
+            <a href="#skills">Skills</a>
+            <a href="#projects">Projects</a>
+            <a href="#contact">Contact</a>
+            <button class="theme-toggle" id="theme-btn">☀️ Light</button>
+        </nav>
+    </header>
+
+    <section id="about">
+        <h2>About Me</h2>
+        <div class="typing-container">
+            <span id="typewriter"></span><span class="cursor">|</span>
+        </div>
+        <p style="margin-top: 20px;">I specialize in high-performance digital solutions.</p>
+    </section>
+
+    <section id="skills">
+        <h2>Skills & Mastery</h2>
+        <div class="skill-item">
+            <div class="skill-info"><span>HTML/CSS</span><span class="skill-val" data-target="90">0%</span></div>
+            <div class="progress-bg"><div class="progress-fill" data-width="90%"></div></div>
+        </div>
+        <div class="skill-item">
+            <div class="skill-info"><span>JavaScript</span><span class="skill-val" data-target="60">0%</span></div>
+            <div class="progress-bg"><div class="progress-fill" data-width="60%"></div></div>
+        </div>
+        <div class="skill-item">
+            <div class="skill-info"><span>Python</span><span class="skill-val" data-target="85">0%</span></div>
+            <div class="progress-bg"><div class="progress-fill" data-width="85%"></div></div>
+        </div>
+    </section>
+
+    <section id="projects">
+        <h2>Featured Projects</h2>
+        <div class="filter-container">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="web">Web Development</button>
+            <button class="filter-btn" data-filter="python">Python / Data</button>
+        </div>
+        <div class="project-grid">
+            <div class="project-card" data-category="web">
+                <div class="project-tag">Web Application</div>
+                <h3>Nexus E-Commerce</h3>
+                <p>A modern shopping experience with custom Stripe integration and real-time inventory.</p>
+            </div>
+            <div class="project-card" data-category="python">
+                <div class="project-tag">Python Script</div>
+                <h3>Alpha Data Bot</h3>
+                <p>An automated scraper and analyzer for financial market data trends.</p>
+            </div>
+            <div class="project-card" data-category="web">
+                <div class="project-tag">UI/UX Tool</div>
+                <h3>Redline Dashboard</h3>
+                <p>High-performance analytics platform focused on user interaction data.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact">
+        <h2>Contact Me</h2>
+        <form class="contact-form" id="contact-form">
+            <div class="form-group">
+                <input type="text" id="name" placeholder="Name">
+                <span class="error-msg">Name is required.</span>
+            </div>
+            <div class="form-group">
+                <input type="email" id="email" placeholder="Email">
+                <span class="error-msg">Please enter a valid email.</span>
+            </div>
+            <div class="form-group">
+                <textarea id="message" rows="5" placeholder="Message"></textarea>
+                <span class="error-msg">Message cannot be empty.</span>
+            </div>
+            <button type="submit" class="btn">Send Message</button>
+            <div class="success-msg" id="success-msg">Message sent successfully!</div>
+        </form>
+    </section>
+
+    <script>
+        /* --- 1. Theme Switcher with localStorage --- */
+        const themeBtn = document.getElementById('theme-btn');
+        const setBg = (theme) => {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            themeBtn.textContent = theme === 'light' ? '🌙 Dark' : '☀️ Light';
+        };
+        themeBtn.addEventListener('click', () => {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            setBg(isLight ? 'dark' : 'light');
+        });
+        if(localStorage.getItem('theme') === 'light') setBg('light');
+
+        /* --- 2. Typing Animation --- */
+        const words = ["I'm a developer", "I'm a creator", "I'm a problem solver"];
+        let wordIdx = 0, charIdx = 0, isDeleting = false;
+        function typeEffect() {
+            const current = words[wordIdx];
+            const target = document.getElementById('typewriter');
+            target.textContent = isDeleting ? current.substring(0, charIdx--) : current.substring(0, charIdx++);
+            let speed = isDeleting ? 50 : 100;
+            if(!isDeleting && charIdx > current.length) { speed = 2000; isDeleting = true; }
+            else if(isDeleting && charIdx === 0) { isDeleting = false; wordIdx = (wordIdx + 1) % words.length; speed = 500; }
+            setTimeout(typeEffect, speed);
+        }
+
+        /* --- 3. Scroll Reveal & Skill Bars --- */
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    if(entry.target.id === 'skills') animateSkills();
+                }
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('section').forEach(s => observer.observe(s));
+
+        function animateSkills() {
+            document.querySelectorAll('.progress-fill').forEach(bar => bar.style.width = bar.dataset.width);
+            document.querySelectorAll('.skill-val').forEach(val => {
+                const target = +val.dataset.target;
+                let count = 0;
+                const update = () => {
+                    if(count < target) { count++; val.innerText = count + '%'; setTimeout(update, 20); }
+                };
+                update();
+            });
+        }
+
+        /* --- 4. Project Filter --- */
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelector('.filter-btn.active').classList.remove('active');
+                btn.classList.add('active');
+                const filter = btn.dataset.filter;
+                document.querySelectorAll('.project-card').forEach(card => {
+                    card.classList.toggle('hide', filter !== 'all' && card.dataset.category !== filter);
+                });
+            });
+        });
+
+        /* --- 5. Form Validation --- */
+        document.getElementById('contact-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            let isValid = true;
+            ['name', 'email', 'message'].forEach(id => {
+                const el = document.getElementById(id);
+                const err = el.nextElementSibling;
+                if(!el.value || (id === 'email' && !el.value.includes('@'))) {
+                    err.style.display = 'block'; isValid = false;
+                } else { err.style.display = 'none'; }
+            });
+            if(isValid) {
+                document.getElementById('success-msg').style.display = 'block';
+                e.target.reset();
+            }
+        });
+
+        typeEffect();
+    </script>
+</body>
+</html>

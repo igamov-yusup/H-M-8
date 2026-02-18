@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Color Mixer</title>
+    <style>
+        /* CSS STYLING */
+        :root {
+            /* Default starting gradient */
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: #ffffff;
+            --accent: #4a90e2;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-gradient);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            /* Smooth transition for the 'backstage' color change */
+            transition: background 0.4s ease-out;
+            background-attachment: fixed;
+        }
+
+        .mixer-card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            width: 400px;
+            text-align: center;
+        }
+
+        h2 { margin-top: 0; color: #333; font-weight: 800; }
+
+        .preview-box {
+            width: 100%;
+            height: 140px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: background 0.1s ease;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        #hex-display { font-weight: bold; font-size: 1.6rem; letter-spacing: 1px; }
+        #rgb-display { font-size: 0.9rem; margin-top: 5px; opacity: 0.8; font-family: monospace; }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        label { width: 55px; font-weight: 600; color: #555; font-size: 0.9rem; }
+
+        input[type="range"] {
+            flex: 1;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
+        input[type="number"] {
+            width: 55px;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin: 25px 0;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: var(--accent);
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.1s, filter 0.2s;
+        }
+
+        button:hover { filter: brightness(1.1); }
+        button:active { transform: scale(0.96); }
+        #copy-btn { background: #2d3436; }
+
+        .history-container {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .history-label {
+            font-size: 0.8rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .history-list {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            min-height: 40px;
+        }
+
+        .history-swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .history-swatch:hover { transform: scale(1.15) rotate(5deg); }
+    </style>
+</head>
+<body>
+
+<div class="mixer-card">
+    <h2>Color Mixer</h2>
+
+    <div id="preview" class="preview-box">
+        <span id="hex-display">#FFFFFF</span>
+        <span id="rgb-display">rgb(255, 255, 255)</span>
+    </div>
+
+    <div class="controls">
+        <div class="control-row">
+            <label>Red</label>
+            <input type="range" id="r-range" min="0" max="255" value="102">
+            <input type="number" id="r-num" min="0" max="255" value="102">
+        </div>
+        <div class="control-row">
+            <label>Green</label>
+            <input type="range" id="g-range" min="0" max="255" value="126">
+            <input type="number" id="g-num" min="0" max="255" value="126">
+        </div>
+        <div class="control-row">
+            <label>Blue</label>
+            <input type="range" id="b-range" min="0" max="255" value="234">
+            <input type="number" id="b-num" min="0" max="255" value="234">
+        </div>
+    </div>
+
+    <div class="button-group">
+        <button id="random-btn">Randomize</button>
+        <button id="copy-btn">Copy Hex</button>
+    </div>
+
+    <div class="history-container">
+        <span class="history-label">Recent Colors</span>
+        <div id="history-list" class="history-list"></div>
+    </div>
+</div>
+
+<script>
+    // --- State & Selectors ---
+    const rRange = document.getElementById('r-range'), rNum = document.getElementById('r-num');
+    const gRange = document.getElementById('g-range'), gNum = document.getElementById('g-num');
+    const bRange = document.getElementById('b-range'), bNum = document.getElementById('b-num');
+    
+    const preview = document.getElementById('preview');
+    const hexText = document.getElementById('hex-display');
+    const rgbText = document.getElementById('rgb-display');
+    const historyList = document.getElementById('history-list');
+    
+    let history = [];
+
+    // --- Helper Functions ---
+    const toHex = (v) => v.toString(16).padStart(2, '0').toUpperCase();
+
+    function updateUI() {
+        const r = Math.min(255, Math.max(0, parseInt(rNum.value) || 0));
+        const g = Math.min(255, Math.max(0, parseInt(gNum.value) || 0));
+        const b = Math.min(255, Math.max(0, parseInt(bNum.value) || 0));
+
+        const hex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        const rgb = `rgb(${r}, ${g}, ${b})`;
+
+        // 1. Update Preview Box
+        preview.style.backgroundColor = hex;
+        hexText.textContent = hex;
+        rgbText.textContent = rgb;
+
+        // 2. Dynamic "Backstage" (Body Background)
+        // We create a gradient using the selected color and a darker version of itself
+        const darkR = Math.max(0, r - 50);
+        const darkG = Math.max(0, g - 50);
+        const darkB = Math.max(0, b - 50);
+        document.body.style.background = `linear-gradient(135deg, ${rgb} 0%, rgb(${darkR}, ${darkG}, ${darkB}) 100%)`;
+
+        // 3. Contrast Check for Text inside Preview
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        const textColor = brightness > 128 ? '#333' : '#fff';
+        hexText.style.color = textColor;
+        rgbText.style.color = textColor;
+    }
+
+    function addToHistory() {
+        const currentColor = preview.style.backgroundColor;
+        if (history[0] === currentColor) return;
+        history.unshift(currentColor);
+        if (history.length > 5) history.pop();
+        renderHistory();
+    }
+
+    function renderHistory() {
+        historyList.innerHTML = '';
+        history.forEach(color => {
+            const swatch = document.createElement('div');
+            swatch.className = 'history-swatch';
+            swatch.style.backgroundColor = color;
+            swatch.title = "Click to restore";
+            swatch.onclick = () => {
+                const parts = color.match(/\d+/g);
+                rRange.value = rNum.value = parts[0];
+                gRange.value = gNum.value = parts[1];
+                bRange.value = bNum.value = parts[2];
+                updateUI();
+            };
+            historyList.appendChild(swatch);
+        });
+    }
+
+    // --- Events ---
+    [ [rRange, rNum], [gRange, gNum], [bRange, bNum] ].forEach(([range, num]) => {
+        range.oninput = () => { num.value = range.value; updateUI(); };
+        num.oninput = () => { range.value = num.value; updateUI(); };
+        range.onchange = addToHistory;
+        num.onblur = addToHistory;
+    });
+
+    document.getElementById('random-btn').onclick = () => {
+        rRange.value = rNum.value = Math.floor(Math.random() * 256);
+        gRange.value = gNum.value = Math.floor(Math.random() * 256);
+        bRange.value = bNum.value = Math.floor(Math.random() * 256);
+        updateUI();
+        addToHistory();
+    };
+
+    document.getElementById('copy-btn').onclick = function() {
+        navigator.clipboard.writeText(hexText.textContent).then(() => {
+            const originalText = this.textContent;
+            this.textContent = "Copied!";
+            setTimeout(() => this.textContent = originalText, 1500);
+        });
+    };
+
+    // Initialize UI
+    updateUI();
+</script>
+
+</body>
+</html>
