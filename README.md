@@ -1,0 +1,1 @@
+This was a bit easy, I didn't face any problems, morover it was very interesting. I made a small changes in my 2 second homework (8.1). I made that to change color even in the backstage. About portfilio i did do something like fundamental but there is also small changes and it really interesting this time> that's all
